@@ -106,13 +106,15 @@ sub pollWiki
 		foreach (@announcements)
 		{
 			last unless ($newIndex--);
-			my $action = "created";
 			my $color = RED;
-			my $short = get('http://is.gd/create.php?format=simple&url='.uri_escape($wikiurl.$_->{'page'}));
 			$color = GREEN if $_->{'change'} > 0;
+			my $short = get('http://is.gd/create.php?format=simple&url='.uri_escape($wikiurl.$_->{'page'}));
+			my $action = "created";
 			$action= "editted" if $_->{'type'} && $_->{'type'} eq "edit";
-			say(BLACK.BOLD."[".PURPLE."UnvWiki".BLACK."] ".$_->{'user'}.NORMAL. " " . $action . " " .BOLD. $_->{'page'} . " ".NORMAL . $_->{'date'} . "\n");
-			say($color.$_->{'change'} .NORMAL. " changes made. [". $_->{'comment'}."] " .BLUE.UNDERLINE."[$short]". "\n");
+			my $comment = "<none>";
+			$comment = $_->{'comment'} if $_>{'comment'};
+			say(BLACK.BOLD."[".PURPLE."UnvWiki".BLACK."] ".WHITE.$_->{'user'}.NORMAL. " " . $action . " " .BOLD. $_->{'page'} . " ".NORMAL . $_->{'date'} . "\n");
+			say(BOLD."Comment: ".NORMAL.$comment.BLUE.UNDERLINE." $short". "\n");
 		}
 	}
 	else
@@ -121,7 +123,7 @@ sub pollWiki
 	}
 	@announcements = grep({ time() - $_->{'time'} < 300 } @announcements);
 
-	$_[KERNEL]->delay( pollWiki => 1 );
+	$_[KERNEL]->delay( pollWiki => 120 );
 }
 
 sub say
