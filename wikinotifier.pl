@@ -110,11 +110,10 @@ sub pollWiki
 			$color = GREEN if $_->{'change'} > 0;
 			my $short = get('http://is.gd/create.php?format=simple&url='.uri_escape($wikiurl.$_->{'page'}));
 			my $action = "created";
-			$action= "editted" if $_->{'type'} && $_->{'type'} eq "edit";
-			my $comment = "<none>";
-			$comment = $_->{'comment'} if $_>{'comment'};
+			$action= "edited" if $_->{'type'} && $_->{'type'} eq "edit";
+			$action = "deleted" if $_->{'newlen'} == 0 && $_->{'type'} eq "log";
 			say(BLACK.BOLD."[".PURPLE."UnvWiki".BLACK."] ".WHITE.$_->{'user'}.NORMAL. " " . $action . " " .BOLD. $_->{'page'} . " ".NORMAL . $_->{'date'} . "\n");
-			say(BOLD."Comment: ".NORMAL.$comment.BLUE.UNDERLINE." $short". "\n");
+			say(BOLD."Comment: ".NORMAL.$_->{'comment'}." ".BLUE.UNDERLINE.$short. "\n");
 		}
 	}
 	else
@@ -165,7 +164,7 @@ sub timeDifference
 	return format_date($date, "day") if $date;
 	return format_date($hour, "hour") if $hour;
 	return format_date($min, "minute") if $min;
-	return format_date($sec, "second") if $sec;
+	return format_date($sec, "second");
 }
 
 sub format_date
