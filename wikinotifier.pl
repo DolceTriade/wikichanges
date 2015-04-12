@@ -40,7 +40,6 @@ sub _start {
 
   # retrieve our component's object from the heap where we stashed it
   my $irc = $heap->{irc};
-
   $irc->yield( register => 'all' );
   $irc->yield( connect => { } );
   return;
@@ -67,29 +66,54 @@ sub pollWiki
 {
   my $wiki_data= decode_json(get($url));
   my @data = @{$wiki_data->{'query'}{'recentchanges'}};
+  my $announcements = {};
+
   if (intifyDate($data[0]->{'timestamp'}) == $lasttime)
   {
-    $_[KERNEL]->delay( pollWiki => 10 );
+    $_[KERNEL]->delay( pollWiki => 120 );
     return;
   }
+
   for (@data)
   {
     last if intifyDate($_->{'timestamp'}) <= $lasttime;
     my $change = 0;
-    my $color = RED;
-    my $short = get('http://is.gd/create.php?format=simple&url='.uri_escape($wikiurl.$_->{'title'}));
-    my $action = "created";
-
     $change = $_->{'newlen'} - $_->{'oldlen'} if $_->{'newlen'};
-    $color = GREEN if $change > 0;
-    $action= "edited" if $_->{'type'} && $_->{'type'} eq "edit";
-    $action = "deleted" if $_->{'newlen'} == 0 && $_->{'type'} eq "log";
-
-    say(BLACK.BOLD."[".PURPLE."UnvWiki".BLACK."] ".WHITE.$_->{'user'}.NORMAL. " " . $action . " " .BOLD. $_->{'title'} . " ".NORMAL . timeDifference($_->{'timestamp'}) . "\n");
-    say(BOLD."Comment: ".NORMAL.$_->{'comment'}." ".BLUE.UNDERLINE.$short. "\n");
+    $announcements->{$_->{'user'}} = [] unless exists $announcements->{$_->{'user'}};
+    push(@{$announcements->{$_->{'user'}}}, {
+        comment => $_->{'comment'},
+        change => $change,
+        title => $_->{'title'},
+        type => $_->{'type'},
+        date => timeDifference($_->{'timestamp'})});
   }
+
+  for my $user (sort keys %{$announcements})
+  {
+    my $total = scalar(@{$announcements->{$user}});
+    my $count = 0;
+
+    say(BLACK.BOLD."[".PURPLE."UnvWiki".BLACK."] ".WHITE.BOLD. $user . NORMAL." made $total new " . ($total == 1 ? "change" : "changes") . "...\n");
+    for (@{$announcements->{$user}})
+    {
+      if ($count == 4 && $total > $count)
+      {
+        say(" ... +" .BOLD.WHITE.($total-$count) . " more!\n");
+        last;
+      }
+      my $color = RED;
+      my $action = "created";
+
+      $color = GREEN if $_->{'change'} > 0;
+      $action= "edited" if $_->{'type'} && $_->{'type'} eq "edit";
+      $action = "deleted" if $_->{'change'} == 0 && $_->{'type'} eq "log";
+      say(NORMAL. " " . $action . " " .BOLD. $_->{'title'} . ": ".NORMAL . ( $_->{'comment'} ? $_->{'comment'} : "<none>...") . $_->{'date'} . "\n");
+      $count++;
+    }
+  }
+
   $lasttime = intifyDate($data[0]->{'timestamp'});
-  $_[KERNEL]->delay( pollWiki => 10 );
+  $_[KERNEL]->delay( pollWiki => 120 );
 }
 
 sub say
