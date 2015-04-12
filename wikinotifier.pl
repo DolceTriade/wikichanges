@@ -16,7 +16,7 @@ use POE qw(Component::IRC);
 my $nickname = 'Wikiflips';
 my $ircname  = 'The Unv Wiki notifier bot';
 my $server   = 'irc.freenode.org';
-my @channels = ('#unvanquished-anime');
+my @channels = ('#unvanquished-dev');
 my $lasttime = 0;
 
 # We create a new PoCo-IRC object
