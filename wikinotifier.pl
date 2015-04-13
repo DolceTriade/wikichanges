@@ -98,7 +98,7 @@ sub pollWiki
     {
       if ($count == 4 && $total > $count)
       {
-        say(" ... +" .BOLD.WHITE.($total-$count) . " more!\n");
+        say(" ... " .BOLD.WHITE."+".($total-$count) . " more!\n");
         last;
       }
       my $color = RED;
@@ -107,7 +107,7 @@ sub pollWiki
       $color = GREEN if $_->{'change'} > 0;
       $action= "edited" if $_->{'type'} && $_->{'type'} eq "edit";
       $action = "deleted" if $_->{'change'} == 0 && $_->{'type'} eq "log";
-      say(NORMAL. " " . $action . " " .BOLD. $_->{'title'} . ": ".NORMAL . ( $_->{'comment'} ? $_->{'comment'} : "<none>...") . $_->{'date'} . "\n");
+      say(NORMAL. " " . $action . " " .BOLD. $_->{'title'} . ": ".NORMAL . ( $_->{'comment'} ? $_->{'comment'} : "<none>") . "..." . $_->{'date'} . "\n");
       $count++;
     }
   }
